@@ -31,4 +31,21 @@ for i in range(len(inf_fn_pd)):
     work_with_mifd(mifd_fn, sq_name)
     # work_with_mifd(fl_name, sq_name)
 
+# Сделать
+#  Поле2D_01_(2024H2).ppt - Scipy.Spatial – пространственные  функции
+#  Query
+#  query_ball_point
+#  query_pairs
+#  pdist – попарные расстояния между наблюдениями.1
+
+# Scipy.Cluster – кластеризация
+# Кластеризация по CenterX, CenterY потом по Square, Perimeter
+# Кластеризация по Square, Perimeter потом по CenterX, CenterY
+# https://en.wikipedia.org/wiki/K-means_clustering
+
+# Корреялция по Square, Perimeter
+
+
+# Двумерное преобразовыавние Фурье
+
 
