@@ -6,34 +6,134 @@ en.wikipedia.org/wiki/List_of_map_projections
 en.wikipedia.org/wiki/SK-42_reference_system
 """
 import numpy as np
+from scipy.constants import value
+
 from pspat_const import *
 import geopandas
 import sys
 import inspect
 import matplotlib.pyplot as plt
+from math import hypot
+from pprint import pp
 
-def work_with_mifd(fl_name, sq_name=''):
+
+
+# Определдение расстояний между центрами
+def fun_CentrXY_01(gdf:geopandas.geodataframe.GeoDataFrame, view=False)->dict():
+    """
+    Определение расстояний между центрами.
+    Попарные расстояния
+    """
+    print('Function name = ', inspect.currentframe().f_code.co_name)
+    ll=len(gdf)
+    dd=dict()
+    for i in range(ll):
+        for j in range(ll):
+            if i!=j:
+                if i<j: ii,jj=i,j
+                else: ii,jj=j,i
+                k=(ii,jj)
+                if k not in dd:
+                    x=gdf.CentrX[i]-gdf.CentrX[j]
+                    y=gdf.CentrY[i]-gdf.CentrY[j]
+                    dd[k]=hypot(x,y)
+                else: dd[(i,j)]=dd[k]
+    if view: pp(dd)
+    return dd
+    # https://stackoverflow.com/questions/33094509/correct-sizing-of-markers-in-scatter-plot-to-a-radius-r-in-matplotlib
+
+def view_dict_length(dd:dict):
+    """ Диаграмма точка-точка.
+     Размер маркера = расстоянию между точками
+     """
+    print('Function name = ', inspect.currentframe().f_code.co_name)
+    keys = np.array(list(dd.keys()))
+    size = np.array(list(dd.values()))
+    x=keys[:,0]
+    y=keys[:,1]
+    cmap = 'seismic'
+    plt.scatter(x,y,s=size, c=size)
+    plt.colorbar()
+    plt.grid()
+    plt.show()
+
+def view_dict_length2(dd:dict):
+    """
+    Вычисление и изуализация нарастающих расстояний или приращений расстояний
+    """
+    print('Function name = ', inspect.currentframe().f_code.co_name)
+    keys_ = np.array(tuple(dd.keys()))
+    values_=np.array(tuple(dd.values()))
+    ll=len(keys_)
+    print(f'{ll=}')
+    print(keys_)
+    print(keys_[:,0])
+    s=list(set(keys_[:,0]))
+    lls=len(s)
+    plt.figure(figsize=(16, 16))
+    aver=np.zeros(lls-1)
+    aver_add=np.zeros(lls-2)
+    print(lls, s)
+    for ss in s:
+        if ss<70:
+            lst=[]
+            for i in range(ll):
+                if keys_[i,0]==ss:
+                    # lst.append((values_[i],keys_[i]))
+                    lst.append(values_[i]) # +ss*20
+            lst.sort()
+            lst_add=[lst[j]-lst[j-1] for j in range(1,len(lst))]
+            aver += np.array(lst)
+            aver_add += np.array(lst_add)
+            # plt.plot(range(len(lst)),lst)
+            # plt.scatter(range(len(lst)), lst, s=5)
+            plt.plot(range(len(lst_add)),lst_add)
+            plt.scatter(range(len(lst_add)), lst_add, s=5)
+    # plt.plot(range(len(aver)), aver/(lls-1), c='r', linewidth='4')
+    plt.plot(range(len(aver_add)), aver_add / (lls-2), c='r', linewidth='4')
+    print(f'{np.min(aver_add / (lls-2))=} ')
+    print(f'{np.argmin(aver_add/(lls-2))=} ')
+    ax = plt.gca()
+    ax.set_ylim([0, 2])
+    # plt.legend()
+    plt.grid()
+    plt.show()
+
+
+
+
+def input_mifd(fl_name, sq_name='', view=False)->geopandas.geodataframe.GeoDataFrame:
+    print('Function name = ', inspect.currentframe().f_code.co_name)
     path = fl_name+'.mif'
     df = geopandas.read_file(path, encoding='UTF-8')
+    # stackoverflow.com/questions/45393123/adding-calculated-column-in-pandas
+    df['pdivs'] = df.Perimetr / df.Square
+    print(df['pdivs'])
     df_geom=df['geometry']
     gdf = geopandas.GeoDataFrame(df, geometry='geometry', crs='epsg:4326')
 
-    # for i in range(1):  # len(gdf)
-    #     print(i, df.Labels[i])
-    #     print(i, df.geometry[i])
-    # print('-- cycle -- geometry')
-    # for i in range(len(gdf)):
-    #     print(i, gdf.geometry[i])
-    print('\n-------------- df')
-    print(df)
-    print('\n-------------- df_geom')
-    print(df_geom)
-    print('\n-------------- gdf')
-    print(gdf)
-    # print('\n-------------- gdf.geometry')
-    # print(gdf.geometry)
-    print('\n-------------- gdf.Labels')
-    print(gdf.Labels    )
+    if view:
+        # for i in range(1):  # len(gdf)
+        #     print(i, df.Labels[i])
+        #     print(i, df.geometry[i])
+        # print('-- cycle -- geometry')
+        # for i in range(len(gdf)):
+        #     print(i, gdf.geometry[i])
+        print('\n-------------- df')
+        print(df)
+        print('\n-------------- df_geom')
+        print(df_geom)
+        print('\n-------------- gdf')
+        print(gdf)
+        print('\n-------------- gdf.geometry')
+        print(gdf.geometry)
+        print('\n-------------- gdf.Labels')
+        print(gdf.Labels    )
+        print('\n-------------- CentrX CentrY - (beg)')
+        for i in range(len(gdf)):
+            print(f'{i:3} {gdf.CentrX[i]:8.4f} {gdf.CentrY[i]:8.4f}')
+        print('-------------- CentrX CentrY - (end)\n')
+    return gdf
 
 from geopandas import GeoDataFrame
 def work_with_mifd2(fl_name, sq_name=''):

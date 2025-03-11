@@ -21,14 +21,21 @@ import numpy as np
 # xmain, xcoo, ycoo, lbl = expand_mid(mid)
 # spat_clust01(xmain)
 
+
 inf_fn_pd = input_inf(f_inf_nm)
 # view_inf(inf_fn_pd)
+the_view=True
 for i in range(len(inf_fn_pd)):
     sq_name=list(inf_fn_pd.iloc[[0]]['sq_name'])[0]
     print(f'{sq_name=}')
     mifd_fn=list((inf_fn_pd.iloc[[0]]["f_name"]))[0]
     print(f'{mifd_fn=}')
-    work_with_mifd(mifd_fn, sq_name)
+    gdf=input_mifd(mifd_fn, sq_name)
+    dd=fun_CentrXY_01(gdf, view=the_view)
+    if the_view:
+        view_dict_length(dd)
+    else:
+        view_dict_length2(dd)
     # work_with_mifd(fl_name, sq_name)
 
 # Сделать
