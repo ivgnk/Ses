@@ -15,46 +15,67 @@ import inspect
 import matplotlib.pyplot as plt
 from math import hypot
 from pprint import pp
-
+from math import pi
 
 
 # Определдение расстояний между центрами
-def fun_CentrXY_01(gdf:geopandas.geodataframe.GeoDataFrame, view=False)->dict():
+def fun_CentrXY_01(gdf:geopandas.geodataframe.GeoDataFrame, view=False):
     """
     Определение расстояний между центрами.
     Попарные расстояния
     """
     print('Function name = ', inspect.currentframe().f_code.co_name)
     ll=len(gdf)
-    dd=dict()
+    dd_ini=dict(); dd_cor=dict()
     for i in range(ll):
         for j in range(ll):
             if i!=j:
                 if i<j: ii,jj=i,j
                 else: ii,jj=j,i
                 k=(ii,jj)
-                if k not in dd:
+                if k not in dd_ini:
                     x=gdf.CentrX[i]-gdf.CentrX[j]
                     y=gdf.CentrY[i]-gdf.CentrY[j]
-                    dd[k]=hypot(x,y)
-                else: dd[(i,j)]=dd[k]
-    if view: pp(dd)
-    return dd
+                    dd_ini[k]=hypot(x,y)
+                    dd_cor[k]=dd_ini[k]-float(gdf.rad[i])-float(gdf.rad[j])
+                    if dd_cor[k]<=0: print(f'{k=} Длина <=0')
+                else:
+                    dd_ini[(i,j)]=dd_ini[k]
+                    dd_cor[(i,j)]=dd_cor[k]
+    if view:
+        pp('------------')
+        pp(dd_ini)
+        pp('------------')
+        pp(dd_cor)
+    return dd_ini, dd_cor
     # https://stackoverflow.com/questions/33094509/correct-sizing-of-markers-in-scatter-plot-to-a-radius-r-in-matplotlib
 
-def view_dict_length(dd:dict):
+def view_dict_length(dd_ini:dict,dd_cor:dict):
     """ Диаграмма точка-точка.
      Размер маркера = расстоянию между точками
      """
     print('Function name = ', inspect.currentframe().f_code.co_name)
-    keys = np.array(list(dd.keys()))
-    size = np.array(list(dd.values()))
+    #-------------- 1
+    keys = np.array(list(dd_ini.keys()))
+    size = np.array(list(dd_ini.values()))
     x=keys[:,0]
     y=keys[:,1]
     cmap = 'seismic'
+    plt.figure(figsize=(18, 16))
+    plt.subplot(1, 2, 1)
     plt.scatter(x,y,s=size, c=size)
     plt.colorbar()
     plt.grid()
+    #-------------- 2
+    plt.subplot(1, 2, 2)
+    keys = np.array(list(dd_cor.keys()))
+    size = np.array(list(dd_cor.values()))
+    x=keys[:,0]
+    y=keys[:,1]
+    plt.scatter(x,y,s=size, c=size)
+    plt.colorbar()
+    plt.grid()
+    # -----------------
     plt.show()
 
 def view_dict_length2(dd:dict):
@@ -108,6 +129,7 @@ def input_mifd(fl_name, sq_name='', view=False)->geopandas.geodataframe.GeoDataF
     df = geopandas.read_file(path, encoding='UTF-8')
     # stackoverflow.com/questions/45393123/adding-calculated-column-in-pandas
     df['pdivs'] = df.Perimetr / df.Square
+    df['rad'] = np.sqrt(df.Square/pi)
     print(df['pdivs'])
     df_geom=df['geometry']
     gdf = geopandas.GeoDataFrame(df, geometry='geometry', crs='epsg:4326')

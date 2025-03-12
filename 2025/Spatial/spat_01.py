@@ -31,11 +31,11 @@ for i in range(len(inf_fn_pd)):
     mifd_fn=list((inf_fn_pd.iloc[[0]]["f_name"]))[0]
     print(f'{mifd_fn=}')
     gdf=input_mifd(mifd_fn, sq_name)
-    dd=fun_CentrXY_01(gdf, view=the_view)
+    dd_ini, dd_cor=fun_CentrXY_01(gdf, view=the_view)
     if the_view:
-        view_dict_length(dd)
+        view_dict_length(dd_ini, dd_cor)
     else:
-        view_dict_length2(dd)
+        view_dict_length2(dd_ini, dd_cor)
     # work_with_mifd(fl_name, sq_name)
 
 # Сделать
