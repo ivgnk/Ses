@@ -1,5 +1,5 @@
 # for i in range(2):  print(i)
-
+import numpy as np
 # https://habr.com/ru/companies/ruvds/articles/482464/
 def args_kwargs():
     a,b,c, = 1,11, 111
@@ -25,4 +25,6 @@ def args_kwargs():
             print(f"{pet}: {name}")
     printPetNames("Jonathan", dog="Brock", fish=["Larry", "Curly", "Moe"], turtle="Shelldon")
 
-args_kwargs()
+if __name__=="__main__":
+    print(np.linspace(0,50,51))
+# args_kwargs()

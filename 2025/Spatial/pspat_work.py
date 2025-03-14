@@ -7,6 +7,7 @@ en.wikipedia.org/wiki/SK-42_reference_system
 """
 import numpy as np
 from scipy.constants import value
+from statsmodels.sandbox.regression.try_treewalker import data2
 
 from pspat_const import *
 import geopandas
@@ -17,12 +18,76 @@ from math import hypot
 from pprint import pp
 from math import pi
 
+# Определдение расстояний между центрами, получение матрицы
+def fun_CentrXY_02(gdf:geopandas.geodataframe.GeoDataFrame, view=False):
+    """
+    Определение расстояний между центрами. Попарные расстояния, матрицы
+    """
+    print('Function name = ', inspect.currentframe().f_code.co_name)
+    ll=len(gdf)
+    data=np.zeros((ll,ll))
+    for i in range(ll):
+        for j in range(ll):
+            if i==j or i<j:
+                data[i, j] = None
+            else:
+                x=gdf.CentrX[i]-gdf.CentrX[j]
+                y=gdf.CentrY[i]-gdf.CentrY[j]
+                data[i,j]=hypot(x,y)
+    return data
 
-# Определдение расстояний между центрами
+# Определдение расстояний между центрами, получение матрицы, модельный пример, квадратная сетка
+def fun_CentrXY_mod(view=False):
+    """
+    Определение расстояний между центрами. Попарные расстояния, матрицы, модельный пример, квадратная сетка
+    """
+    print('Function name = ', inspect.currentframe().f_code.co_name)
+    nn=51
+    print('================== 1')
+    # xl = np.linspace(0,50,nn)
+    # yl = np.linspace(0,50,nn)
+
+    data=np.zeros((nn*nn,2))
+    for i in range(nn):
+        for j in range(nn):
+            data[i,j]=i
+
+
+    x, y = np.meshgrid(xl, yl)
+    print('--------x--------')
+    print(x)
+    print('--------y--------')
+    print(y)
+    for i in range(nn):
+        for j in range(nn):
+            for k in range(nn):
+                for l in range(nn):
+                    print(i, j, k, l, i + j * nn, k + l * nn)
+                    if i==k and j==l:
+                        data[i + j * nn, k + l * nn] = None
+                    else:
+                        xd=x[i,j]-x[k,l]
+                        yd=y[i,j]-y[k,l]
+                        data[i+j*nn, k+l*nn]=hypot(xd,yd)
+    print(data)
+    return data
+
+
+def view_color_grid(data1):
+    n=13
+    plt.figure(figsize=(n, n+2))
+    plt.pcolor(data1,
+               cmap=plt.get_cmap('Spectral', 11))
+    plt.xlabel('Номер объекта')
+    plt.ylabel('Номер объекта')
+    plt.colorbar()
+    plt.show()
+
+
+# Определдение расстояний между центрами, получение словаря
 def fun_CentrXY_01(gdf:geopandas.geodataframe.GeoDataFrame, view=False):
     """
-    Определение расстояний между центрами.
-    Попарные расстояния
+    Определение расстояний между центрами. Попарные расстояния, получение словаря
     """
     print('Function name = ', inspect.currentframe().f_code.co_name)
     ll=len(gdf)
@@ -37,7 +102,9 @@ def fun_CentrXY_01(gdf:geopandas.geodataframe.GeoDataFrame, view=False):
                     x=gdf.CentrX[i]-gdf.CentrX[j]
                     y=gdf.CentrY[i]-gdf.CentrY[j]
                     dd_ini[k]=hypot(x,y)
-                    dd_cor[k]=dd_ini[k]-float(gdf.rad[i])-float(gdf.rad[j])
+                    ddd=dd_ini[k]-float(gdf.rad[i])-float(gdf.rad[j])
+                    if ddd>0: dd_cor[k]=ddd
+                    else: dd_cor[k]=dd_ini[k]*0.5
                     if dd_cor[k]<=0: print(f'{k=} Длина <=0')
                 else:
                     dd_ini[(i,j)]=dd_ini[k]
@@ -49,6 +116,20 @@ def fun_CentrXY_01(gdf:geopandas.geodataframe.GeoDataFrame, view=False):
         pp(dd_cor)
     return dd_ini, dd_cor
     # https://stackoverflow.com/questions/33094509/correct-sizing-of-markers-in-scatter-plot-to-a-radius-r-in-matplotlib
+
+def view_dict_length0(dd_ini:dict):
+    print('Function name = ', inspect.currentframe().f_code.co_name)
+    #-------------- 1
+    keys = np.array(list(dd_ini.keys()))
+    size = np.array(list(dd_ini.values()))
+    x=keys[:,0]
+    y=keys[:,1]
+    cmap = 'seismic'
+    plt.figure(figsize=(14, 16))
+    plt.scatter(x,y,s=size, c=size)
+    plt.colorbar()
+    plt.grid()
+    plt.show()
 
 def view_dict_length(dd_ini:dict,dd_cor:dict):
     """ Диаграмма точка-точка.
@@ -205,8 +286,8 @@ def view_geoDataFrame(df):
 
 if __name__=="__main__":
     # work_with_mifd2(UK_f_name,UK_sq_name)
-    work_with_mifd2('Str_w', UK_sq_name)
-
+    # work_with_mifd2('Str_w', UK_sq_name)
+    fun_CentrXY_mod()
 
 
 
