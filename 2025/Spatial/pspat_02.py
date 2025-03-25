@@ -27,4 +27,5 @@ def read1(fn_mid:str):
     print(lst)
 
 if __name__=="__main__":
-    read1('Str_H_2k_13-11-13_w.MID')
+    # read1('Str_H_2k_13-11-13_w.MID')
+    pass

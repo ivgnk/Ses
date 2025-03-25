@@ -9,7 +9,7 @@
 # https://stackoverflow.com/questions/38523965/python-pandas-create-empty-dataframe-specifying-column-dtypes
 import numpy as np
 import pandas as pd
-from pspat_const import *
+# from pspat_const import *
 
 import inspect
 
@@ -47,7 +47,7 @@ def create_empty_pandas2():
 
 # https://www.geeksforgeeks.org/python-read-csv-using-pandas-read_csv/
 def input_inf(fname)->pd.DataFrame:
-    # print('Function name = ',inspect.currentframe().f_code.co_name)
+    print('\nFunction name = ',inspect.currentframe().f_code.co_name)
     # df = pd.read_csv(f_inf_nm, delimiter=';')
     # print(df)
     # return pd.read_csv(fname, sep=r';| ')
@@ -68,7 +68,8 @@ def view_inf(inf_fn_pd:pd.DataFrame):
     print('\n6---------')
     print(f'{len(inf_fn_pd)=}')
 
-
+print('pspat_01')
 if __name__=="__main__":
-    print(input_inf(f_inf_nm))
+    # print(input_inf(f_inf_nm))
+    pass
 

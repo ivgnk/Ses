@@ -36,3 +36,5 @@ def spat_clust01(xmain): # , xcoo, ycoo, lbl
     k_best = k_means_df.k.head().to_list()
     k_means_df = k_means_df.sort_values(by = 'k')
     print(k_best, type(k_best))
+
+print('\npspat_clust01')

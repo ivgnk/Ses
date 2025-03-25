@@ -1,13 +1,19 @@
 """
+pspat_work
 Обработка введенных данных
 
 en.wikipedia.org/wiki/EPSG_Geodetic_Parameter_Dataset
 en.wikipedia.org/wiki/List_of_map_projections
 en.wikipedia.org/wiki/SK-42_reference_system
 """
+from multiprocessing.sharedctypes import SynchronizedArray
+
 import numpy as np
+from matplotlib.pyplot import figure
 from scipy.constants import value
 from statsmodels.sandbox.regression.try_treewalker import data2
+from sympy.abc import alpha
+from sympy.physics.units import farad
 
 from pspat_const import *
 import geopandas
@@ -17,8 +23,11 @@ import matplotlib.pyplot as plt
 from math import hypot
 from pprint import pp
 from math import pi
+import statistics
+from pspat_anom_dist import *
+# from statistics import *
 
-# Определдение расстояний между центрами, получение матрицы
+# Определение расстояний между центрами, получение матрицы
 def fun_CentrXY_02(gdf:geopandas.geodataframe.GeoDataFrame, view=False):
     """
     Определение расстояний между центрами. Попарные расстояния, матрицы
@@ -26,6 +35,7 @@ def fun_CentrXY_02(gdf:geopandas.geodataframe.GeoDataFrame, view=False):
     print('Function name = ', inspect.currentframe().f_code.co_name)
     ll=len(gdf)
     data=np.zeros((ll,ll))
+    res=[]
     for i in range(ll):
         for j in range(ll):
             if i==j or i<j:
@@ -33,8 +43,33 @@ def fun_CentrXY_02(gdf:geopandas.geodataframe.GeoDataFrame, view=False):
             else:
                 x=gdf.CentrX[i]-gdf.CentrX[j]
                 y=gdf.CentrY[i]-gdf.CentrY[j]
-                data[i,j]=hypot(x,y)
-    return data
+                dat=hypot(x,y)
+                data[i,j]=dat
+                res.append(dat)
+    return data, res
+
+def cntr_xy_stat(res, title='', the_stop=False):
+    print('\nFunction name = ', inspect.currentframe().f_code.co_name)
+    print('Статистика =', title)
+    print(f'{min(res)=:.4f}')
+    print(f'{max(res)=:.4f}')
+    print(f'{statistics.mean(res)=:.4f}')
+    print(f'{statistics.median(res)=:.4f}')
+    print(f'{statistics.mode(res)=:.4f}')
+    print(f'{statistics.quantiles(res)=}')
+    counts, bins = np.histogram(res)
+    print(f'{counts=}')
+    print(f'{bins=}')
+
+    plt.title('Гистограмма расстояний между центрами структур и ПУ')
+    plt.hist(res, density=False, bins=10, rwidth=0.95)
+    plt.xlabel('Расстояние, км')
+    plt.ylabel('Число пар')
+    plt.grid()
+    plt.show()
+    if the_stop: sys.exit()
+
+
 
 # Определдение расстояний между центрами, получение матрицы, модельный пример, квадратная сетка
 def fun_CentrXY_mod(view=False):
@@ -44,33 +79,23 @@ def fun_CentrXY_mod(view=False):
     print('Function name = ', inspect.currentframe().f_code.co_name)
     nn=51
     print('================== 1')
-    # xl = np.linspace(0,50,nn)
-    # yl = np.linspace(0,50,nn)
-
-    data=np.zeros((nn*nn,2))
+    data=[]
     for i in range(nn):
         for j in range(nn):
-            data[i,j]=i
-
-
-    x, y = np.meshgrid(xl, yl)
-    print('--------x--------')
-    print(x)
+            data.append([i,j])
     print('--------y--------')
-    print(y)
+    ndata = np.zeros((nn, nn))
     for i in range(nn):
         for j in range(nn):
-            for k in range(nn):
-                for l in range(nn):
-                    print(i, j, k, l, i + j * nn, k + l * nn)
-                    if i==k and j==l:
-                        data[i + j * nn, k + l * nn] = None
-                    else:
-                        xd=x[i,j]-x[k,l]
-                        yd=y[i,j]-y[k,l]
-                        data[i+j*nn, k+l*nn]=hypot(xd,yd)
-    print(data)
-    return data
+            if i==j or i<j:
+                ndata[i, j] = None
+            else:
+                x=data[i][0]-data[j][0]
+                y=data[i][1]-data[j][1]
+                ndata[i,j]=hypot(x,y)
+    print('--------ymatr--------')
+    print(ndata)
+    return ndata
 
 
 def view_color_grid(data1):
@@ -84,7 +109,97 @@ def view_color_grid(data1):
     plt.show()
 
 
-# Определдение расстояний между центрами, получение словаря
+
+def tst_fun_CentrXY_01nn():
+    print('Function name = ', inspect.currentframe().f_code.co_name)
+    gpd=input_mifd(UK_f_name)
+    res_main, res_all = fun_CentrXY_01nn(gpd, an_dist)
+    nears='ближайшие точки окружения'; fars='точки окружения'
+    cntr_xy_stat(res_main,nears)
+    cntr_xy_stat(res_all,fars)
+    print(len(res_main),'   ',len(res_all))
+
+    plt.title('Гистограмма расстояний между центрами структур и ПУ')
+    plt.hist(res_all, density=False, bins=10, rwidth=0.8,label=fars)
+    plt.hist(res_main, density=False, bins=10, rwidth=0.8,label=nears)
+    plt.xlabel('Расстояние, км')
+    plt.ylabel('Число пар')
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+def view_default_clucters(gdf, an_dist:dict):
+    """
+    Просмотр поля точек с размеченными кластерами
+    """
+    print('Function name = ', inspect.currentframe().f_code.co_name)
+    ll=len(gdf)
+    plt.figure(figsize=(7,11))
+    for i in range(ll):  # повсем аномалиям
+        nan_ = int(gdf.Labels[i])  # текущий номер аномалии
+        xan = gdf.CentrX[i]
+        yan = gdf.CentrY[i]
+        ncol=an_dist[nan_]['cl']-1
+        plt.scatter(xan, yan, color=nclust_color[ncol])
+    plt.title('Ручное разбиение аномалий на кластеры')
+    fs=13;   plt.xlabel('x, км', fontsize=fs);     plt.ylabel('y, км', fontsize=fs)
+    plt.grid()
+    #################### Равный шаг по сетке
+    ax = plt.gca()
+    ax.set_aspect('equal', adjustable='box')
+    ####################
+    plt.show()
+
+def tst_view_default_clucters():
+    gpd=input_mifd(UK_f_name, view=True)
+    view_default_clucters(gpd, an_dist)
+
+
+# Определение расстояний между центрами аномалий (учитывая номера), получение словаря.
+def fun_CentrXY_01nn(gdf, an_dist:dict, view=False):
+    """
+    Определение расстояний между центрами аномалий (учитывая номера), получение словаря.
+    """
+    print('Function name = ', inspect.currentframe().f_code.co_name)
+    ll=len(gdf)
+
+    # keyl=list(an_dist.keys())
+    # valuel = list(an_dist.values())
+    res_main=[]; res_all=[]
+    with open("intro.txt", "w") as file:
+        for i in range(ll):  # повсем аномалиям
+            nan_ = int(gdf.Labels[i])            # текущий номер аномалии
+            # Индексы в mid - строки, индексы в an_dist -  целые
+            near_an = list(map(str,an_dist[nan_]['main'])) # аномалии, ближайшие к текущей
+            far_an = list(map(str,an_dist[nan_]['add']))  # аномалии, далекие от текущей
+            print(i,' -- ', nan_, near_an, far_an)  #
+            xan=gdf.CentrX[i]; yan=gdf.CentrY[i]
+            file.write(f'{i:2} --  {nan_}\n')
+            for j in near_an:  # по всем ближайшим аномалиям
+                dat=gdf.loc[gdf['Labels'] == j]
+                xc=dat['CentrX']; yc=dat['CentrY']
+                x=xan-xc; y=yan-yc
+                dat=hypot(x,y)
+                res_main.append(dat)
+                res_all.append(dat)
+                file.write(f'  {j:2}   {dat:7.3f}   km -- main\n')
+                # print('----------')
+                # print(xan, yan)
+                # sys.exit()
+
+            for j in far_an:  # по всем дальним аномалиям
+                dat=gdf.loc[gdf['Labels'] == j]
+                xc=dat['CentrX']; yc=dat['CentrY']
+                x=xan-xc; y=yan-yc
+                dat=hypot(x,y)
+                res_all.append(dat)
+                file.write(f'  {j:2}   {dat:7.3f}   km -- add\n')
+
+    return res_main, res_all
+
+
+
+# Определение расстояний между центрами аномалий (НЕ учитывая номера), получение словаря
 def fun_CentrXY_01(gdf:geopandas.geodataframe.GeoDataFrame, view=False):
     """
     Определение расстояний между центрами. Попарные расстояния, получение словаря
@@ -118,6 +233,9 @@ def fun_CentrXY_01(gdf:geopandas.geodataframe.GeoDataFrame, view=False):
     # https://stackoverflow.com/questions/33094509/correct-sizing-of-markers-in-scatter-plot-to-a-radius-r-in-matplotlib
 
 def view_dict_length0(dd_ini:dict):
+    """
+    scatter - диаграмма расстояний
+    """
     print('Function name = ', inspect.currentframe().f_code.co_name)
     #-------------- 1
     keys = np.array(list(dd_ini.keys()))
@@ -161,7 +279,7 @@ def view_dict_length(dd_ini:dict,dd_cor:dict):
 
 def view_dict_length2(dd:dict):
     """
-    Вычисление и изуализация нарастающих расстояний или приращений расстояний
+    Вычисление и визуализация нарастающих расстояний или приращений расстояний
     """
     print('Function name = ', inspect.currentframe().f_code.co_name)
     keys_ = np.array(tuple(dd.keys()))
@@ -205,17 +323,32 @@ def view_dict_length2(dd:dict):
 
 
 def input_mifd(fl_name, sq_name='', view=False)->geopandas.geodataframe.GeoDataFrame:
-    print('Function name = ', inspect.currentframe().f_code.co_name)
+    print('\nFunction name = ', inspect.currentframe().f_code.co_name)
     path = fl_name+'.mif'
     df = geopandas.read_file(path, encoding='UTF-8')
     # stackoverflow.com/questions/45393123/adding-calculated-column-in-pandas
     df['pdivs'] = df.Perimetr / df.Square
     df['rad'] = np.sqrt(df.Square/pi)
-    print(df['pdivs'])
+    #--------------- добавление столбца с моим номером кластера
+    ncl = add_nclust()
+    df['nclucter'] = ncl[:]
+    #--------------- добавление столбца-заготовки для нового номера кластера
+    df['nclucter_new'] = ncl[:]
+    #---------------
+    # print(df['pdivs'])
     df_geom=df['geometry']
-    gdf = geopandas.GeoDataFrame(df, geometry='geometry', crs='epsg:4326')
+    gdf = geopandas.GeoDataFrame(df, geometry='geometry') # , crs='epsg:4326'
 
     if view:
+        print(gdf)
+        gdf.plot(figsize=(7,11), column='nclucter') # , alpha=0.75
+        plt.title(f'Ручное разбиение на кластеры')
+        #################### Равный шаг по сетке
+        ax = plt.gca()
+        ax.set_aspect('equal', adjustable='box')
+        ####################
+        plt.grid()
+        plt.show()
         # for i in range(1):  # len(gdf)
         #     print(i, df.Labels[i])
         #     print(i, df.geometry[i])
@@ -284,10 +417,13 @@ def view_geoDataFrame(df):
     for i in range(len(df)):
         print(f'{i:3}  {len(list(df.geometry[i].exterior.coords)):4} {list(df.geometry[i].exterior.coords)}')
 
+print('\npspat_work')
+
 if __name__=="__main__":
     # work_with_mifd2(UK_f_name,UK_sq_name)
     # work_with_mifd2('Str_w', UK_sq_name)
-    fun_CentrXY_mod()
-
-
+    # fun_CentrXY_mod()
+    # tst_fun_CentrXY_01nn()
+    # tst_view_default_clucters()
+    pass
 
