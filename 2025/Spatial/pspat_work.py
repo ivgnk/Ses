@@ -25,6 +25,7 @@ from pprint import pp
 from math import pi
 import statistics
 from pspat_anom_dist import *
+from pspat_clust_color import *
 # from statistics import *
 
 # Определение расстояний между центрами, получение матрицы
@@ -320,6 +321,23 @@ def view_dict_length2(dd:dict):
     plt.show()
 
 
+def output_mifparts(gdf, dirnm:str, flname:str, column:str, prop_lst:list):
+    # print(gdf); input('Press <Enter>')
+    """
+    Вывод mif по частям в зависимости от кластера
+    """
+    print('Function name = ', inspect.currentframe().f_code.co_name)
+    # print(gdf);  input('print(gdf) -> Press <Enter>')
+    ll=len(prop_lst)
+    for n in prop_lst:
+        nm=f'{dirnm}/{flname}__{ll}-'+str(n).zfill(2)+'.mif'
+        # print(f'{n}  {column}   {str(n)}  {type(str(n))}  {nclust_color[n]}')
+        # print(f'Часть {n} ==== ')
+        # print(gdf[gdf[[column]] == nclust_color[n]])
+        gdf[gdf[column] == nclust_color[n]].to_file(nm)
+
+
+
 
 
 def input_mifd(fl_name, sq_name='', view=False)->geopandas.geodataframe.GeoDataFrame:
@@ -331,14 +349,15 @@ def input_mifd(fl_name, sq_name='', view=False)->geopandas.geodataframe.GeoDataF
     df['rad'] = np.sqrt(df.Square/pi)
     #--------------- добавление столбца с моим номером кластера
     ncl = add_nclust()
-    df['nclucter'] = ncl[:]
+    df[ncluster] = ncl[:]
     #--------------- добавление столбца-заготовки для нового номера кластера
-    df['nclucter_new'] = ncl[:]
+    df[nclucter_new] = ncl[:]
     #---------------
     # print(df['pdivs'])
     df_geom=df['geometry']
     gdf = geopandas.GeoDataFrame(df, geometry='geometry') # , crs='epsg:4326'
-
+    gdf.to_file("output.mif")
+    output_mifparts(gdf, dirnm=def_out, flname=UK_f_name, column=ncluster, prop_lst=[0,1,2,3,4,5,6,7,8])
     if view:
         print(gdf)
         gdf.plot(figsize=(7,11), column='nclucter') # , alpha=0.75
@@ -419,11 +438,13 @@ def view_geoDataFrame(df):
 
 print('\npspat_work')
 
+import pyogrio
+import pprint
 if __name__=="__main__":
     # work_with_mifd2(UK_f_name,UK_sq_name)
     # work_with_mifd2('Str_w', UK_sq_name)
     # fun_CentrXY_mod()
     # tst_fun_CentrXY_01nn()
-    # tst_view_default_clucters()
-    pass
-
+    tst_view_default_clucters()
+    # pass
+    # pprint.pp(pyogrio.list_drivers())

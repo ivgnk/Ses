@@ -12,6 +12,9 @@ UK_f_name='Str_H_2k_13-11-13_w'
 UK_mid_fname='Str_H_2k_13-11-13_w.MID'
 UK_sq_name='Юго-Камская'
 
+# Папка в которую выводить по умолчанию части файлов
+def_out='def_out'
+
 lst_uk_mid=[
 [55,4.79445,1.65968,406.166,390.662,1.65968],
 [31,5.39475,2.26171,410.392,392.342,2.26171],
@@ -94,4 +97,5 @@ def make_pandas_from_uk_mid():
 
 if __name__=='__main__':
     # make_pandas_from_uk_mid()
-    tst_add_nclust()
+    # tst_add_nclust()
+    pass
