@@ -43,10 +43,19 @@ def plot_clusters(dat:[list, np.ndarray], labels:Union[list, np.ndarray], title=
     else: bs1=5
     if isinstance(dat, list): dats=np.array(dat)
     else: dats=dat
-    print(f'{type(dats)=}')
+    # print(f'{type(dats)=}')
 
     x=dats[:,0]; y=dats[:,1]
-    clrs=[colors[labels[i]-1] for i in range(ll)]
+    if isinstance(labels, list): lbl = np.array(dat)
+    else: lbl=labels
+    if lbl.min()==1: lbl=lbl-1
+    clrs=[' ' for i in range(ll)]
+    for i in range(ll):
+        if lbl[i] != -1:
+            clrs[i]=colors[lbl[i]]
+        else:
+            clrs[i]='black'
+    # clrs=[colors[lbl[i]] for i in range(ll)]
     plt.scatter(x, y, marker='o', c=clrs, sizes=[bs1]*ll)
     plt.axis('equal')
     plt.grid()
@@ -116,6 +125,6 @@ def all_create_data(npoints=1500, view1=False)->(np.ndarray, np.ndarray):
 if __name__=='__main__':
     # rng, a, b, c = create_data(an, bn, cn, the_len=1500, view=True)
     # dat, metki = concat_dats(a, b, c)
-    dat, metki = all_create_data(view1=True)
+    dat, metki = all_create_data(npoints=100, view1=True)
     # print(f'{dat.shape=}   {metki.shape}')
     # print(f'{an=}   {bn=}   {cn=}')
