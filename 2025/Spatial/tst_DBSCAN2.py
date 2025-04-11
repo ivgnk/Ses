@@ -13,3 +13,4 @@ clustering = DBSCAN(eps=3, min_samples=2).fit(X)
 print(f'{clustering.labels_= }')  # array([ 0,  0,  0,  1,  1, -1])
 print(f'{clustering= }') # DBSCAN(eps=3, min_samples=2)
 
+plot_clusters(X, clustering.labels_, title='DBSCAN')

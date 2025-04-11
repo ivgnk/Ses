@@ -92,7 +92,7 @@ def create_data(an, bn, cn, the_len:int=100, view=True):
     b = rng.multivariate_normal([2, 0], [[1, -1], [-1, 3]], size=bn)
     c = rng.multivariate_normal([6, 4], [[5, 0], [0, 1.2]], size=cn)
     # print('\na=\n', a); print('\nb=\n', b); print('\nc=\n', c)
-    if view: plot_abc(a,b,c,'ini', True)
+    if view: plot_abc(a,b,c,'Исходное поле точек', True)
     return rng, a, b, c
 
 def concat_dats(a, b, c)->(np.ndarray, np.ndarray):

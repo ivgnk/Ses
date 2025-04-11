@@ -70,13 +70,14 @@ def plot_decision_boundaries(X, y, model, title, subplot_index, X_train, y_train
     plt.ylabel('Feature 2')
 
 
-plt.figure(figsize=(10, 4))
-# Plot decision boundaries for LDA
+# plt.figure(figsize=(10, 4))
+# # Plot decision boundaries for LDA
+# plot_decision_boundaries(X_test, y_test, lda, "LDA Decision Boundary", 121, X_train, y_train, X, y)
+# # Plot decision boundaries for QDA
+# plot_decision_boundaries(X_test, y_test, qda, "QDA Decision Boundary", 122, X_train, y_train, X, y)
 
-plot_decision_boundaries(X_test, y_test, lda, "LDA Decision Boundary", 121, X_train, y_train, X, y)
-
-# Plot decision boundaries for QDA
-plot_decision_boundaries(X_test, y_test, qda, "QDA Decision Boundary", 122, X_train, y_train, X, y)
+plot_decision_boundaries(X_test, y_test, lda, "Линейный дискриминантный анализ", 111, X_train, y_train, X, y)
+plt.grid()
 
 plt.tight_layout()
 plt.show()

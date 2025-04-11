@@ -26,11 +26,17 @@ distances=['braycurtis', 'canberra', 'chebyshev',
           'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule']
 
 methods=['single','complete', 'average', 'weighted', 'centroid', 'median','ward']
+methods=['median']
+methods=['single']
+methods=['complete']
+methods=['average']
+methods=['weighted']
+methods=['centroid']
 methods=['ward']
 
 # data = [[1, 2], [3, 4], [5, 6], [7, 8]]
-data, metki = all_create_data(npoints=100, view1=True)
-data= the_rnd_data
+data, metki = all_create_data(npoints=1500, view1=True)
+# data= the_rnd_data
 print(f'{len(data)=}')
 # print(data)
 # sys.exit()
